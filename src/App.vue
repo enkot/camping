@@ -138,7 +138,7 @@ async function pause(_hosts: Host[]) {
         </div>
       </div>
     </div>
-    <div class="grid auto-rows-min gap-1 px-2 sm:grid-cols-3 light">
+    <div class="grid auto-rows-min gap-1 px-2 sm:grid-cols-3 ">
       <Card v-for="host in hosts" v-bind="host" @start="start([host])" @pause="pause([host])" />
     </div>
   </div>

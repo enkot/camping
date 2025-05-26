@@ -220,15 +220,15 @@ const data = computed(() => {
 </script>
 
 <template>
-  <Card class="overflow-hidden border-0 pt-0 pb-0 border text-black" :class="paused || !continued ? 'bg-gray-400 border-gray-300' : lastPing?.status === 'timeout'
-    ? 'bg-red-700 border-red-600'
-    : 'bg-lime-400 border-lime-300'
+  <Card class="overflow-hidden border-0 pt-0 pb-0 border rounded-none text-black" :class="paused || !continued ? 'bg-gray-400 dark:border-gray-300 border-gray-500' : lastPing?.status === 'timeout'
+    ? 'bg-red-700 dark:border-red-600 border-red-800'
+    : 'bg-lime-400 dark:border-lime-300 border-lime-500'
     ">
     <CardContent class="relative px-3">
       <!-- <p class="text-sm text-muted-foreground">192.168.0.1</p> -->
       <p class="absolute opacity-80 top-1">{{ alias }}</p>
       <div class="flex mt-7 mb-1 gap-2 items-center">
-        <Button size="sm" @click="() => paused ? $emit('start') : $emit('pause')">
+        <Button size="sm" @click="() => paused ? $emit('start') : $emit('pause')" variant="secondary">
           <Icon :icon="paused ? 'radix-icons:play' : 'radix-icons:pause'" class="w-4 h-4 font-bold" />
         </Button>
         <div class="text-4xl text-black">
