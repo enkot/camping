@@ -1,4 +1,4 @@
-import { customRef } from "vue";
+import { customRef, ref } from "vue";
 import { load, Store } from "@tauri-apps/plugin-store";
 
 interface Options {
@@ -45,4 +45,10 @@ export function useAsyncStorageRef<T>(
       },
     };
   });
+}
+
+const menuOpened = ref(false)
+
+export function useMenu() {
+  return menuOpened
 }

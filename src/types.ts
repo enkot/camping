@@ -1,7 +1,7 @@
 export interface HostInfo {
   alias: string;
   host: string;
-  paused: boolean;
+  paused?: boolean;
   continued?: boolean;
 }
 

@@ -1,270 +1,212 @@
 <script setup lang="ts">
+import { ArchiveX, Command, File, Inbox, Send, Trash2 } from 'lucide-vue-next'
+import { h, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { Label } from '@/components/ui/label'
 import {
-    AudioWaveform,
-    Blocks,
-    Calendar,
-    Command,
-    Home,
-    Inbox,
-    MessageCircleQuestion,
-    Search,
-    Settings2,
-    Sparkles,
-    Trash2,
-} from 'lucide-vue-next'
-
-import NavDashboards from '@/components/NavDashboards.vue'
-import NavMain from '@/components/NavMain.vue'
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarHeader,
-    type SidebarProps,
-    SidebarRail,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInput,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  type SidebarProps,
+  useSidebar,
 } from '@/components/ui/sidebar'
 
-const props = defineProps<SidebarProps>()
-
-// This is sample data.
+const props = withDefaults(defineProps<SidebarProps>(), {
+  collapsible: 'icon',
+})
+// This is sample data
 const data = {
-    teams: [
-        {
-            name: 'Acme Inc',
-            logo: Command,
-            plan: 'Enterprise',
-        },
-        {
-            name: 'Acme Corp.',
-            logo: AudioWaveform,
-            plan: 'Startup',
-        },
-        {
-            name: 'Evil Corp.',
-            logo: Command,
-            plan: 'Free',
-        },
-    ],
-    navMain: [
-        {
-            title: 'Search',
-            url: '#',
-            icon: Search,
-        },
-        {
-            title: 'Ask AI',
-            url: '#',
-            icon: Sparkles,
-        },
-        {
-            title: 'Home',
-            url: '#',
-            icon: Home,
-            isActive: true,
-        },
-        {
-            title: 'Inbox',
-            url: '#',
-            icon: Inbox,
-            badge: '10',
-        },
-    ],
-    navSecondary: [
-        {
-            title: 'Calendar',
-            url: '#',
-            icon: Calendar,
-        },
-        {
-            title: 'Settings',
-            url: '#',
-            icon: Settings2,
-        },
-        {
-            title: 'Templates',
-            url: '#',
-            icon: Blocks,
-        },
-        {
-            title: 'Trash',
-            url: '#',
-            icon: Trash2,
-        },
-        {
-            title: 'Help',
-            url: '#',
-            icon: MessageCircleQuestion,
-        },
-    ],
-    favorites: [
-        {
-            name: 'Project Management & Task Tracking',
-            url: '#',
-            emoji: '📊',
-        },
-        {
-            name: 'Family Recipe Collection & Meal Planning',
-            url: '#',
-            emoji: '🍳',
-        },
-        {
-            name: 'Fitness Tracker & Workout Routines',
-            url: '#',
-            emoji: '💪',
-        },
-        {
-            name: 'Book Notes & Reading List',
-            url: '#',
-            emoji: '📚',
-        },
-        {
-            name: 'Sustainable Gardening Tips & Plant Care',
-            url: '#',
-            emoji: '🌱',
-        },
-        {
-            name: 'Language Learning Progress & Resources',
-            url: '#',
-            emoji: '🗣️',
-        },
-        {
-            name: 'Home Renovation Ideas & Budget Tracker',
-            url: '#',
-            emoji: '🏠',
-        },
-        {
-            name: 'Personal Finance & Investment Portfolio',
-            url: '#',
-            emoji: '💰',
-        },
-        {
-            name: 'Movie & TV Show Watchlist with Reviews',
-            url: '#',
-            emoji: '🎬',
-        },
-        {
-            name: 'Daily Habit Tracker & Goal Setting',
-            url: '#',
-            emoji: '✅',
-        },
-    ],
-    workspaces: [
-        {
-            name: 'Personal Life Management',
-            emoji: '🏠',
-            pages: [
-                {
-                    name: 'Daily Journal & Reflection',
-                    url: '#',
-                    emoji: '📔',
-                },
-                {
-                    name: 'Health & Wellness Tracker',
-                    url: '#',
-                    emoji: '🍏',
-                },
-                {
-                    name: 'Personal Growth & Learning Goals',
-                    url: '#',
-                    emoji: '🌟',
-                },
-            ],
-        },
-        {
-            name: 'Professional Development',
-            emoji: '💼',
-            pages: [
-                {
-                    name: 'Career Objectives & Milestones',
-                    url: '#',
-                    emoji: '🎯',
-                },
-                {
-                    name: 'Skill Acquisition & Training Log',
-                    url: '#',
-                    emoji: '🧠',
-                },
-                {
-                    name: 'Networking Contacts & Events',
-                    url: '#',
-                    emoji: '🤝',
-                },
-            ],
-        },
-        {
-            name: 'Creative Projects',
-            emoji: '🎨',
-            pages: [
-                {
-                    name: 'Writing Ideas & Story Outlines',
-                    url: '#',
-                    emoji: '✍️',
-                },
-                {
-                    name: 'Art & Design Portfolio',
-                    url: '#',
-                    emoji: '🖼️',
-                },
-                {
-                    name: 'Music Composition & Practice Log',
-                    url: '#',
-                    emoji: '🎵',
-                },
-            ],
-        },
-        {
-            name: 'Home Management',
-            emoji: '🏡',
-            pages: [
-                {
-                    name: 'Household Budget & Expense Tracking',
-                    url: '#',
-                    emoji: '💰',
-                },
-                {
-                    name: 'Home Maintenance Schedule & Tasks',
-                    url: '#',
-                    emoji: '🔧',
-                },
-                {
-                    name: 'Family Calendar & Event Planning',
-                    url: '#',
-                    emoji: '📅',
-                },
-            ],
-        },
-        {
-            name: 'Travel & Adventure',
-            emoji: '🧳',
-            pages: [
-                {
-                    name: 'Trip Planning & Itineraries',
-                    url: '#',
-                    emoji: '🗺️',
-                },
-                {
-                    name: 'Travel Bucket List & Inspiration',
-                    url: '#',
-                    emoji: '🌎',
-                },
-                {
-                    name: 'Travel Journal & Photo Gallery',
-                    url: '#',
-                    emoji: '📸',
-                },
-            ],
-        },
-    ],
+  user: {
+    name: 'shadcn',
+    email: 'm@example.com',
+    avatar: '/avatars/shadcn.jpg',
+  },
+  navMain: [
+    {
+      title: 'Dashboards',
+      url: '/',
+      icon: Inbox,
+      isActive: true,
+    },
+    {
+      title: 'Hosts',
+      url: '/hosts',
+      icon: File,
+      isActive: false,
+    },
+    {
+      title: 'Sent',
+      url: '#',
+      icon: Send,
+      isActive: false,
+    },
+    {
+      title: 'Junk',
+      url: '#',
+      icon: ArchiveX,
+      isActive: false,
+    },
+    {
+      title: 'Trash',
+      url: '#',
+      icon: Trash2,
+      isActive: false,
+    },
+  ],
+  mails: [
+    {
+      name: 'William Smith',
+      email: 'williamsmith@example.com',
+      subject: 'Meeting Tomorrow',
+      date: '09:34 AM',
+      teaser:
+        'Hi team, just a reminder about our meeting tomorrow at 10 AM.\nPlease come prepared with your project updates.',
+    },
+    {
+      name: 'Alice Smith',
+      email: 'alicesmith@example.com',
+      subject: 'Re: Project Update',
+      date: 'Yesterday',
+      teaser:
+        'Thanks for the update. The progress looks great so far.\nLet\'s schedule a call to discuss the next steps.',
+    },
+    {
+      name: 'Bob Johnson',
+      email: 'bobjohnson@example.com',
+      subject: 'Weekend Plans',
+      date: '2 days ago',
+      teaser:
+        'Hey everyone! I\'m thinking of organizing a team outing this weekend.\nWould you be interested in a hiking trip or a beach day?',
+    },
+    {
+      name: 'Emily Davis',
+      email: 'emilydavis@example.com',
+      subject: 'Re: Question about Budget',
+      date: '2 days ago',
+      teaser:
+        'I\'ve reviewed the budget numbers you sent over.\nCan we set up a quick call to discuss some potential adjustments?',
+    },
+    {
+      name: 'Michael Wilson',
+      email: 'michaelwilson@example.com',
+      subject: 'Important Announcement',
+      date: '1 week ago',
+      teaser:
+        'Please join us for an all-hands meeting this Friday at 3 PM.\nWe have some exciting news to share about the company\'s future.',
+    },
+    {
+      name: 'Sarah Brown',
+      email: 'sarahbrown@example.com',
+      subject: 'Re: Feedback on Proposal',
+      date: '1 week ago',
+      teaser:
+        'Thank you for sending over the proposal. I\'ve reviewed it and have some thoughts.\nCould we schedule a meeting to discuss my feedback in detail?',
+    },
+    {
+      name: 'David Lee',
+      email: 'davidlee@example.com',
+      subject: 'New Project Idea',
+      date: '1 week ago',
+      teaser:
+        'I\'ve been brainstorming and came up with an interesting project concept.\nDo you have time this week to discuss its potential impact and feasibility?',
+    },
+    {
+      name: 'Olivia Wilson',
+      email: 'oliviawilson@example.com',
+      subject: 'Vacation Plans',
+      date: '1 week ago',
+      teaser:
+        'Just a heads up that I\'ll be taking a two-week vacation next month.\nI\'ll make sure all my projects are up to date before I leave.',
+    },
+    {
+      name: 'James Martin',
+      email: 'jamesmartin@example.com',
+      subject: 'Re: Conference Registration',
+      date: '1 week ago',
+      teaser:
+        'I\'ve completed the registration for the upcoming tech conference.\nLet me know if you need any additional information from my end.',
+    },
+    {
+      name: 'Sophia White',
+      email: 'sophiawhite@example.com',
+      subject: 'Team Dinner',
+      date: '1 week ago',
+      teaser:
+        'To celebrate our recent project success, I\'d like to organize a team dinner.\nAre you available next Friday evening? Please let me know your preferences.',
+    },
+  ],
 }
+const activeItem = ref(data.navMain[0])
+const mails = ref(data.mails)
+const { setOpen } = useSidebar()
 </script>
-
 <template>
-    <Sidebar class=" border-r-0" v-bind="props">
-        <SidebarHeader>
-            <NavMain :items="data.navMain" />
-        </SidebarHeader>
-        <SidebarContent>
-            <NavDashboards :favorites="data.favorites" />
-        </SidebarContent>
-        <SidebarRail />
+    <Sidebar
+    class="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row"
+    v-bind="props"
+  >
+    <!-- This is the first sidebar -->
+    <!-- We disable collapsible and adjust width to icon. -->
+    <!-- This will make the sidebar appear as icons. -->
+    <Sidebar
+        v-bind="props"
+      collapsible="none"
+      class="!w-[calc(var(--sidebar-width-icon)_+_1px)] border-r h-screen"
+    >
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" as-child class="md:h-8 md:p-0">
+              <a href="#">
+                <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-foreground text-orange-500">
+                  <Command class="size-4" />
+                </div>
+                <div class="grid flex-1 text-left text-sm leading-tight">
+                  <span class="truncate font-semibold">Acme Inc</span>
+                  <span class="truncate text-xs">Enterprise</span>
+                </div>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent class="px-1.5 md:px-0">
+            <SidebarMenu>
+              <SidebarMenuItem v-for="item in data.navMain" :key="item.title">
+                <SidebarMenuButton
+                  :tooltip="h('div', { hidden: false }, item.title)"
+                  :is-active="activeItem.title === item.title"
+                  class="px-2.5 md:px-2"
+                  :as="RouterLink"
+                  :to="item.url"
+                  @click="() => {
+                    activeItem = item
+                    const mail = data.mails.sort(() => Math.random() - 0.5)
+                    mails = mail.slice(0, Math.max(5, Math.floor(Math.random() * 10) + 1))
+                    setOpen(true)
+                  }"
+                >
+                
+                  <component :is="item.icon" />
+                  <span>{{ item.title }}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <!-- <SidebarFooter>
+        <NavUser :user="data.user" />
+      </SidebarFooter> -->
+    </Sidebar>
     </Sidebar>
 </template>

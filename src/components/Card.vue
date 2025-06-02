@@ -21,13 +21,14 @@ import { Icon } from "@iconify/vue";
 import { Button } from "@/components/ui/button";
 import { PingResult } from "@/types";
 import { useWindowSize } from "@vueuse/core";
+import { vMaska } from "maska/vue"
 
 const props = defineProps<{
   pingResults: PingResult[];
   lastPing: PingResult;
   alias: string;
   host: string;
-  paused: boolean;
+  paused?: boolean;
   continued?: boolean;
 }>();
 
@@ -92,7 +93,7 @@ const options = {
     padding: {
       top: 0,
       right: 0,
-      bottom: -10,
+      bottom: 0,
       left: 0,
     },
   },
@@ -144,94 +145,97 @@ const data = computed(() => {
       {
         type: "line",
         label: "Duration",
-        borderColor: "rgba(0,0,0,0.8)",// '#1a2e05',
-        // segment: {
-        //   borderColor(ctx: any) {
-        //     // const data = context.dataset.data;
-        //     // const last = data[data.length - 1];
+        borderColor: 'oklch(53.2% 0.157 131.589)',
+        segment: {
+          borderColor(ctx: any) {
+            // const data = context.dataset.data;
+            // const last = data[data.length - 1];
 
-        //     return ctx.p1.parsed.y ? undefined : "#b91c1c";
+            return ctx.p1.parsed.y ? undefined : "oklch(39.6% 0.141 25.723)";
 
-        //     // return last?.isTimeout
-        //     //   ? "oklch(44.4% 0.177 26.899)"
-        //     //   : "oklch(53.2% 0.157 131.589)";
-        //   },
-        //   backgroundColor(ctx: any) {
+            // return last?.isTimeout
+            //   ? "oklch(44.4% 0.177 26.899)"
+            //   : "oklch(53.2% 0.157 131.589)";
+          },
+          // backgroundColor(ctx: any) {
 
-        //     return ctx.p1.parsed.y ? undefined : "rgba(220, 38, 38, 0.5)";
-        //   },
-        //   spanGaps: true
-        // },
-        fill: "start", // Fill the area under the line
+          //   return ctx.p1.parsed.y ? undefined : "rgba(220, 38, 38, 1)";
+          // },
+          spanGaps: true
+        },
+        // fill: "start", // Fill the area under the line
         data: list.value,
-        borderWidth: 1,
+        borderWidth: 2,
         pointRadius: 0,
         borderRadius: 2,
-        tension: 0.4,
+        tension: 0,
         order: 2,
         clip: true,
       },
-      {
-        type: "bar",
-        label: "Data Two",
-        borderColor(context: any) {
-          const data = context.dataset.data;
-          const last = data[data.length - 1];
+      // {
+      //   type: "bar",
+      //   label: "Data Two",
+      //   borderColor(context: any) {
+      //     const data = context.dataset.data;
+      //     const last = data[data.length - 1];
 
-          return active ? "oklch(70.7% 0.022 261.325)" : "oklch(84.1% 0.238 128.85)";
-        },
-        backgroundColor(context: any) {
-          const chart = context.chart;
-          const { ctx, chartArea } = chart;
-          const data = context.dataset.data;
-          const last = data[data.length - 1];
+      //     return active ? "oklch(70.7% 0.022 261.325)" : "oklch(84.1% 0.238 128.85)";
+      //   },
+      //   backgroundColor(context: any) {
+      //     const chart = context.chart;
+      //     const { ctx, chartArea } = chart;
+      //     const data = context.dataset.data;
+      //     const last = data[data.length - 1];
 
-          if (!chartArea) {
-            // This case happens on initial chart load
-            return;
-          }
-          const gradient = ctx.createLinearGradient(
-            0,
-            chartArea.bottom,
-            0,
-            chartArea.top
-          );
+      //     if (!chartArea) {
+      //       // This case happens on initial chart load
+      //       return;
+      //     }
+      //     const gradient = ctx.createLinearGradient(
+      //       0,
+      //       chartArea.bottom,
+      //       0,
+      //       chartArea.top
+      //     );
 
-          gradient.addColorStop(0, "#dc2626");
-          gradient.addColorStop(1, "oklch(84.1% 0.238 128.85)");
+      //     gradient.addColorStop(0, "#dc2626");
+      //     gradient.addColorStop(1, "oklch(84.1% 0.238 128.85)");
 
-          return gradient;
-        },
-        data: list.value.map((item) => {
-          return {
-            ...item,
-            y: !item.y ? max + 20 : undefined,
-          };
-        }),
-        barThickness: 8,
-        pointRadius: 0,
-        borderRadius: 2,
-        borderWidth: 3,
-        order: 1,
-      },
+      //     return gradient;
+      //   },
+      //   data: list.value.map((item) => {
+      //     return {
+      //       ...item,
+      //       y: !item.y ? max + 20 : undefined,
+      //     };
+      //   }),
+      //   barThickness: 8,
+      //   pointRadius: 0,
+      //   borderRadius: 2,
+      //   borderWidth: 3,
+      //   order: 1,
+      // },
     ],
   };
 })
 </script>
 
 <template>
-  <Card class="overflow-hidden border-0 pt-0 pb-0 border rounded-none text-black" :class="paused || !continued ? 'bg-gray-400 dark:border-gray-300 border-gray-500' : lastPing?.status === 'timeout'
-    ? 'bg-red-700 dark:border-red-600 border-red-800'
-    : 'bg-lime-400 dark:border-lime-300 border-lime-500'
+  <Card class="overflow-hidden border-0 pt-0 pb-0 border rounded-none" :class="paused || !continued ? '' : !lastPing?.duration
+    ? 'bg-red-500/20 dark:bg-red-500/5'
+    : 'bg-lime-500/20 dark:bg-lime-500/5'
     ">
     <CardContent class="relative px-3">
       <!-- <p class="text-sm text-muted-foreground">192.168.0.1</p> -->
-      <p class="absolute opacity-80 top-1">{{ alias }}</p>
-      <div class="flex mt-7 mb-1 gap-2 items-center">
-        <Button size="sm" @click="() => paused ? $emit('start') : $emit('pause')" variant="secondary">
-          <Icon :icon="paused ? 'radix-icons:play' : 'radix-icons:pause'" class="w-4 h-4 font-bold" />
-        </Button>
-        <div class="text-4xl text-black">
+      <p class="absolute text-primary/90 dark:text-muted-foreground top-1.5 text-lg font-bold">{{ host }}</p>
+      <div class="flex mt-10 mb-1 gap-2 items-center" :class="alias ? '' : ''">
+        <!-- <Button size="sm" @click="() => paused ? $emit('start') : $emit('pause')" variant="secondary">
+        </Button> -->
+        <div class="text-4xl p-1 px-2 rounded-md flex items-center gap-1 cursor-pointer" :class="paused || !continued ? 'bg-gray-500/10' : !lastPing?.duration
+          ? 'bg-red-700 dark:bg-red-500/5 text-red-50 dark:text-red-500'
+          : 'bg-lime-700 dark:bg-lime-500/5 text-lime-50 dark:text-lime-500'
+          " @click="() => paused ? $emit('start') : $emit('pause')">
+          <Icon :icon="paused ? 'radix-icons:play' : 'radix-icons:pause'" class="w-8 h-8 font-bold" />
           <template v-if="lastPing?.status === 'timeout'"> Timeout </template>
           <template v-else> {{ lastPing?.duration }}ms </template>
         </div>
@@ -241,11 +245,11 @@ const data = computed(() => {
         <Line :data="data" :options="options" />
       </div>
     </CardContent>
-    <CardHeader class="relative flex items-center h-8 justify-between px-3 text-xl bg-white/40">
-      <span>
-        {{ host }}
+    <CardHeader class="relative flex items-center h-8 justify-between px-3">
+      <span class="text-primary/90 dark:text-muted-foreground">
+        {{ alias }}
       </span>
-      <Icon icon="radix-icons:edit" class="w-4 h-4 font-bold text-muted-foreground"></Icon>
+      <!-- <Icon icon="radix-icons:edit" class="w-4 h-4 font-bold"></Icon> -->
     </CardHeader>
   </Card>
 </template>

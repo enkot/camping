@@ -34,6 +34,27 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { vMaska } from "maska/vue"
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form'
+import { useForm } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import * as z from 'zod'
+import { HostInfo } from '@/types';
+
+const props = defineProps<{
+    hostsInfo: HostInfo[]
+}>()
+
+const emit = defineEmits<{
+    addHost: [HostInfo]
+}>()
 
 const groups = [
     {
@@ -54,112 +75,134 @@ const groups = [
 type Team = (typeof groups)[number]['teams'][number]
 
 const open = ref(false)
-const showNewTeamDialog = ref(false)
+const showDialog = ref(false)
 const selectedTeam = ref<Team>(groups[0].teams[0])
+
+const formSchema = toTypedSchema(z.object({
+    alias: z.string().min(2).max(50).optional(),
+    host: z.string().ip().refine((host) => {
+    // verify that ID exists in database
+        return !props.hostsInfo.some(item => item.host === host)
+    }, {
+        message: 'This host is already in use.'
+    })
+}))
+
+const form = useForm({
+    validationSchema: formSchema,
+})
+
+function onSubmit(values: any) {
+    console.log('Form submitted!', values)
+    emit('addHost', values)
+    showDialog.value = false
+}
 </script>
 
 <template>
-    <Dialog v-model:open="showNewTeamDialog">
-        <Popover v-model:open="open">
-            <PopoverTrigger as-child>
-                <Button variant="outline" role="combobox" aria-expanded="open" aria-label="Select a team"
-                    :class="cn('w-[200px] justify-between', $attrs.class ?? '')">
-                    <Avatar class="mr-2 h-5 w-5">
-                        <AvatarImage :src="`https://avatar.vercel.sh/${selectedTeam.value}.png`"
-                            :alt="selectedTeam.label" />
-                        <AvatarFallback>SC</AvatarFallback>
-                    </Avatar>
-                    {{ selectedTeam.label }}
-                    <Icon icon="radix-icons:caret-sort" class="ml-auto h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-[200px] p-0">
-                <Command>
-                    <CommandList>
-                        <CommandInput placeholder="Search team..." />
-                        <CommandEmpty>No team found.</CommandEmpty>
-                        <CommandGroup v-for="group in groups" :key="group.label" :heading="group.label">
-                            <CommandItem v-for="team in group.teams" :key="team.value" :value="team" class="text-sm"
-                                @select="() => {
-                                    selectedTeam = team
-                                    open = false
-                                }">
-                                <Avatar class="mr-2 h-5 w-5">
-                                    <AvatarImage :src="`https://avatar.vercel.sh/${team.value}.png`" :alt="team.label"
-                                        class="grayscale" />
-                                    <AvatarFallback>SC</AvatarFallback>
-                                </Avatar>
-                                {{ team.label }}
-                                <Icon icon="radix-icons:check" :class="cn('ml-auto h-4 w-4',
-                                    selectedTeam.value === team.value
-                                        ? 'opacity-100'
-                                        : 'opacity-0',
-                                )" />
-                            </CommandItem>
-                        </CommandGroup>
-                    </CommandList>
-                    <CommandSeparator />
-                    <CommandList>
-                        <CommandGroup>
-                            <DialogTrigger as-child>
-                                <CommandItem value="create-team" @select="() => {
-                                    open = false
-                                    showNewTeamDialog = true
-                                }">
-                                    <Icon icon="radix-icons:plus-circled" class="mr-2 h-5 w-5" />
-                                    Create Dashboard
+    <Form v-slot="{ handleSubmit }" as="" keep-values :validation-schema="formSchema">
+        <Dialog v-model:open="showDialog">
+            <Popover v-model:open="open">
+                <PopoverTrigger as-child>
+                    <Button variant="outline" role="combobox" aria-expanded="open" aria-label="Select a team"
+                        :class="cn('w-[200px] justify-between', $attrs.class ?? '')">
+                        <Avatar class="mr-2 h-5 w-5">
+                            <AvatarImage :src="`https://avatar.vercel.sh/${selectedTeam.value}.png`"
+                                :alt="selectedTeam.label" />
+                            <AvatarFallback>SC</AvatarFallback>
+                        </Avatar>
+                        {{ selectedTeam.label }}
+                        <Icon icon="radix-icons:caret-sort" class="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-[200px] p-0">
+                    <Command>
+                        <CommandList>
+                            <CommandInput placeholder="Search team..." />
+                            <CommandEmpty>No team found.</CommandEmpty>
+                            <CommandGroup v-for="group in groups" :key="group.label" :heading="group.label">
+                                <CommandItem v-for="team in group.teams" :key="team.value" :value="team" class="text-sm"
+                                    @select="() => {
+                                        selectedTeam = team
+                                        open = false
+                                    }">
+                                    <Avatar class="mr-2 h-5 w-5">
+                                        <AvatarImage :src="`https://avatar.vercel.sh/${team.value}.png`"
+                                            :alt="team.label" class="grayscale" />
+                                        <AvatarFallback>SC</AvatarFallback>
+                                    </Avatar>
+                                    {{ team.label }}
+                                    <Icon icon="radix-icons:check" :class="cn('ml-auto h-4 w-4',
+                                        selectedTeam.value === team.value
+                                            ? 'opacity-100'
+                                            : 'opacity-0',
+                                    )" />
                                 </CommandItem>
-                            </DialogTrigger>
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Create dashboard</DialogTitle>
-                <DialogDescription>
-                    Add a new dashboard to monitor specific hosts list.
-                </DialogDescription>
-            </DialogHeader>
-            <div>
-                <div class="space-y-4 py-2 pb-4">
-                    <div class="space-y-2">
-                        <Label for="name">Dashboard name</Label>
-                        <Input id="name" placeholder="Acme Inc." />
-                    </div>
-                    <div class="space-y-2">
-                        <Label for="plan">Subscription plan</Label>
-                        <Select>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a plan" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="free">
-                                    <span class="font-medium">Free</span> -
-                                    <span class="text-muted-foreground">
-                                        Trial for two weeks
-                                    </span>
-                                </SelectItem>
-                                <SelectItem value="pro">
-                                    <span class="font-medium">Pro</span> -
-                                    <span class="text-muted-foreground">
-                                        $9/month per user
-                                    </span>
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                            </CommandGroup>
+                        </CommandList>
+                        <CommandSeparator />
+                        <CommandList>
+                            <CommandGroup>
+                                <DialogTrigger as-child>
+                                    <CommandItem value="create-team" @select="() => {
+                                        open = false
+                                        showDialog = true
+                                    }">
+                                        <Icon icon="radix-icons:plus-circled" class="mr-2 h-5 w-5" />
+                                        Create Dashboard
+                                    </CommandItem>
+                                </DialogTrigger>
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+            <DialogContent>
+
+                <DialogHeader>
+                    <DialogTitle>Create dashboard</DialogTitle>
+                    <DialogDescription>
+                        Add a new dashboard to monitor specific hosts list.
+                    </DialogDescription>
+                </DialogHeader>
+                <div>
+                    <form id="dialogForm" @submit="handleSubmit($event, onSubmit)">
+                        <div class="space-y-4 py-2 pb-4">
+                            <div class="space-y-2">
+                                <FormField v-slot="{ componentField }" name="alias">
+                                    <FormItem>
+                                        <FormLabel>Alias</FormLabel>
+                                        <FormControl>
+                                            <Input type="text" placeholder="Google" v-bind="componentField" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                </FormField>
+                            </div>
+                            <div class="space-y-2">
+                                <FormField v-slot="{ componentField }" name="host">
+                                    <FormItem>
+                                        <FormLabel>Host</FormLabel>
+                                        <FormControl>
+                                            <Input v-maska="'#00.#00.#00.#00'" data-maska-tokens="0:[0-9]:optional"
+                                                placeholder="8.8.8.8" v-bind="componentField" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                </FormField>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" @click="showNewTeamDialog = false">
-                    Cancel
-                </Button>
-                <Button type="submit">
-                    Continue
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+                <DialogFooter>
+                    <Button variant="outline" @click="showDialog = false" form="dialogForm">
+                        Cancel
+                    </Button>
+                    <Button type="submit" form="dialogForm">
+                        Continue
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    </Form>
 </template>
