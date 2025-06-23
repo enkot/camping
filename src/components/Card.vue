@@ -18,6 +18,8 @@ import {
 import "chartjs-adapter-luxon";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Icon } from "@iconify/vue";
+import { Play, Pause } from 'lucide-vue-next'
+
 import { Button } from "@/components/ui/button";
 import { PingResult } from "@/types";
 import { useWindowSize } from "@vueuse/core";
@@ -52,7 +54,7 @@ const { width } = useWindowSize();
 
 const maxItems = computed(() => Math.round((width.value - 80) / 3 / 8));
 const list = computed(() => {
-  return Array.from({ length: maxItems.value }, (_, i) => {
+  return Array.from({ length: 60 }, (_, i) => {
     const latest = props.pingResults[props.pingResults.length - i - 1];
     const beforeLatest = props.pingResults[props.pingResults.length - i];
 
@@ -221,9 +223,9 @@ const data = computed(() => {
 </script>
 
 <template>
-  <Card class="overflow-hidden border-0 pt-0 pb-0 border rounded-none" :class="paused || !continued ? '' : !lastPing?.duration
-    ? 'bg-red-500/20 dark:bg-red-500/5'
-    : 'bg-lime-500/20 dark:bg-lime-500/5'
+  <Card class="overflow-hidden border-0 pt-0 pb-0 border rounded-none" :class="paused || !continued ? '' : lastPing?.status === 'success'
+    ? 'bg-lime-500/20 dark:bg-lime-500/10'
+    : 'bg-red-500/20 dark:bg-red-500/10'
     ">
     <CardContent class="relative px-3">
       <!-- <p class="text-sm text-muted-foreground">192.168.0.1</p> -->
@@ -231,11 +233,13 @@ const data = computed(() => {
       <div class="flex mt-10 mb-1 gap-2 items-center" :class="alias ? '' : ''">
         <!-- <Button size="sm" @click="() => paused ? $emit('start') : $emit('pause')" variant="secondary">
         </Button> -->
-        <div class="text-4xl p-1 px-2 rounded-md flex items-center gap-1 cursor-pointer" :class="paused || !continued ? 'bg-gray-500/10' : !lastPing?.duration
-          ? 'bg-red-700 dark:bg-red-500/5 text-red-50 dark:text-red-500'
-          : 'bg-lime-700 dark:bg-lime-500/5 text-lime-50 dark:text-lime-500'
+        <div class="text-4xl p-1 px-2 rounded-md flex items-center gap-1 cursor-pointer" :class="paused || !continued ? 'bg-gray-500/10' : lastPing?.status === 'success'
+          ? 'bg-lime-400/70 dark:bg-lime-500/10 text-lime-800 dark:text-lime-500'
+          : 'bg-red-400/70 dark:bg-red-500/10 text-red-800 dark:text-red-500'
           " @click="() => paused ? $emit('start') : $emit('pause')">
           <Icon :icon="paused ? 'radix-icons:play' : 'radix-icons:pause'" class="w-8 h-8 font-bold" />
+          <!-- <Play v-if="paused" />
+          <Pause v-else /> -->
           <template v-if="lastPing?.status === 'timeout'"> Timeout </template>
           <template v-else> {{ lastPing?.duration }}ms </template>
         </div>

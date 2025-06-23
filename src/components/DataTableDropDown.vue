@@ -4,9 +4,13 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 defineProps<{
-  payment: {
+  host: {
     host: string
   }
+}>()
+
+defineEmits<{
+  edit: [string]
 }>()
 
 function copy(id: string) {
@@ -24,12 +28,12 @@ function copy(id: string) {
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">
       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-      <DropdownMenuItem @click="copy(payment.host)">
-        Copy host
+      <DropdownMenuItem @click="$emit('edit', host.host)">
+        Edit
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem>View customer</DropdownMenuItem>
-      <DropdownMenuItem>View payment details</DropdownMenuItem>
+      <DropdownMenuItem>View host details</DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 </template>

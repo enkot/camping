@@ -1,6 +1,7 @@
 export interface HostInfo {
-  alias: string;
+  id: string;
   host: string;
+  alias: string;
   paused?: boolean;
   continued?: boolean;
 }
@@ -15,4 +16,9 @@ export interface PingResult {
   duration: number;
   timestamp: number;
   status: string;
+}
+
+export interface Dashboard {
+  name: string;
+  hosts: string[];
 }

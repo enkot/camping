@@ -17,17 +17,20 @@ import {
   useVueTable,
 } from '@tanstack/vue-table'
 import { ArrowUpDown, ChevronDown } from 'lucide-vue-next'
-import { h, ref } from 'vue'
+import { h, ref, toRef } from 'vue'
+import { Icon } from "@iconify/vue";
 import { valueUpdater } from '@/utils'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -38,52 +41,17 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import DropdownAction from '@/components/DataTableDropDown.vue'
-import { useAsyncStorageRef } from "@/composables";
 import { Host, HostInfo, PingResult } from "@/types";
+import { useHosts } from '@/composables/hosts';
+import HostEditDialog from '@/components/HostEditDialog.vue';
+import { useStore } from '@/stores/hosts';
 
-export interface Payment {
-  id: string
-  amount: number
-  status: 'pending' | 'processing' | 'success' | 'failed'
-  email: string
-}
+const store = useStore()
+const hostAddress = ref<string | undefined>()
 
-const data = useAsyncStorageRef<HostInfo[]>("hosts", []);
+const showDialog = ref(false)
 
-const data2: Payment[] = [
-  {
-    id: 'm5gr84i9',
-    amount: 316,
-    status: 'success',
-    email: 'ken99@yahoo.com',
-  },
-  {
-    id: '3u1reuv4',
-    amount: 242,
-    status: 'success',
-    email: 'Abe45@gmail.com',
-  },
-  {
-    id: 'derv1ws0',
-    amount: 837,
-    status: 'processing',
-    email: 'Monserrat44@gmail.com',
-  },
-  {
-    id: '5kma53ae',
-    amount: 874,
-    status: 'success',
-    email: 'Silas22@gmail.com',
-  },
-  {
-    id: 'bhqecj4p',
-    amount: 721,
-    status: 'failed',
-    email: 'carmella@hotmail.com',
-  },
-]
-
-const columns: ColumnDef<HostInfo>[] = [
+const columns: ColumnDef<Host>[] = [
   {
     id: 'select',
     header: ({ table }) => h(Checkbox, {
@@ -115,28 +83,36 @@ const columns: ColumnDef<HostInfo>[] = [
     cell: ({ row }) => h('div', row.getValue('alias')),
   },
   {
-    accessorKey: 'availability',
-    header: () => h('div', { class: 'text-right' }, 'Availability'),
-    cell: ({ row }) => {
-      const amount = Number.parseFloat(row.getValue('availability'))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount)
-
-      return h('div', { class: 'text-right font-medium' }, formatted)
+    accessorKey: 'lastPing',
+    header: () => h('div', 'Availability'),
+    cell: ({ cell, row }) => {
+      const paused = row.original.paused;
+      const lastPing = cell.getValue() as PingResult;
+      // return paused ? 'paused' : (status === 'success' ? 'up' : 'down');
+      return h(Badge, {
+        class: !lastPing || paused ? 'bg-gray-500/10 text-gray-800 dark:text-gray-300' : lastPing.status === 'success'
+          ? 'bg-lime-400/70 dark:bg-lime-500/10 text-lime-800 dark:text-lime-500'
+          : 'bg-red-400/70 dark:bg-red-500/10 text-red-800 dark:text-red-500'
+      }, () => !lastPing || paused ? 'paused' : (lastPing.status === 'success' ? 'up' : 'down'))
     },
+    // cell: ({ row }) => {
+    //   const duration = Number.parseFloat(row.getValue('lastPing.duration'))
+
+    //   return h('div', { class: 'text-right font-medium' }, duration ? 'Up' : 'Down')
+    // },
   },
   {
     id: 'actions',
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original
+      const host = row.original
 
       return h(DropdownAction, {
-        payment,
+        host,
+        onEdit: () => {
+          hostAddress.value = host.host
+          showDialog.value = true
+        },
         onExpand: row.toggleExpanded,
       })
     },
@@ -150,7 +126,7 @@ const rowSelection = ref({})
 const expanded = ref<ExpandedState>({})
 
 const table = useVueTable({
-  data,
+  data: toRef(() => store.hosts),
   columns,
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
@@ -170,29 +146,40 @@ const table = useVueTable({
     get expanded() { return expanded.value },
   },
 })
+
+function onSubmit(values: any) {
+  console.log('Form submitted!', values)
+  // addHost(values as HostInfo)
+  showDialog.value = false
+}
 </script>
 
 <template>
-        <AppHeader >
-        <template #title>
-            Hosts
-        </template>
-    </AppHeader>
+  <AppHeader>
+    <template #title>
+      Hosts
+    </template>
+    <template #right>
+      <Button variant="outline" @click="showDialog = true">
+        <Icon icon="radix-icons:plus" />
+        Add Host
+      </Button>
+      <HostEditDialog v-model="showDialog" :host="hostAddress" />
+    </template>
+  </AppHeader>
   <div class="w-full px-4">
     <div class="flex items-center py-4">
-      <Input
-        class="max-w-sm"
-        placeholder="Filter hosts..."
+      <Input class="max-w-sm" placeholder="Filter hosts..."
         :model-value="table.getColumn('alias')?.getFilterValue() as string"
-        @update:model-value=" table.getColumn('alias')?.setFilterValue($event)"
-      />
+        @update:model-value=" table.getColumn('alias')?.setFilterValue($event)" />
     </div>
     <div class="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
             <TableHead v-for="header in headerGroup.headers" :key="header.id">
-              <FlexRender v-if="!header.isPlaceholder" :render="header.column.columnDef.header" :props="header.getContext()" />
+              <FlexRender v-if="!header.isPlaceholder" :render="header.column.columnDef.header"
+                :props="header.getContext()" />
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -213,10 +200,7 @@ const table = useVueTable({
           </template>
 
           <TableRow v-else>
-            <TableCell
-              :colspan="columns.length"
-              class="h-24 text-center"
-            >
+            <TableCell :colspan="columns.length" class="h-24 text-center">
               No results.
             </TableCell>
           </TableRow>
@@ -230,20 +214,10 @@ const table = useVueTable({
         {{ table.getFilteredRowModel().rows.length }} row(s) selected.
       </div>
       <div class="space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="!table.getCanPreviousPage()"
-          @click="table.previousPage()"
-        >
+        <Button variant="outline" size="sm" :disabled="!table.getCanPreviousPage()" @click="table.previousPage()">
           Previous
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="!table.getCanNextPage()"
-          @click="table.nextPage()"
-        >
+        <Button variant="outline" size="sm" :disabled="!table.getCanNextPage()" @click="table.nextPage()">
           Next
         </Button>
       </div>

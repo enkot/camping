@@ -3,9 +3,11 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::sync::Arc;
+use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use surge_ping::{Client, Config, PingIdentifier, PingSequence};
 use tauri::{AppHandle, Emitter, State};
+use tauri_plugin_pinia::{ManagerExt, SaveStrategy};
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
@@ -28,11 +30,23 @@ struct PingResult {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_pinia::init())
+        // .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(
+            tauri_plugin_pinia::Builder::new()
+                .default_save_strategy(SaveStrategy::throttle_secs(3))
+                .autosave(Duration::from_secs(60))
+                .pretty(true)
+                .build(),
+        )
         .manage(AppState {
             tasks: Arc::new(Mutex::new(HashMap::new())),
         })
-        .invoke_handler(tauri::generate_handler![start_pinging, pause_pinging])
+        .invoke_handler(tauri::generate_handler![
+            start_pinging,
+            pause_pinging,
+            stop_all_except
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -133,6 +147,51 @@ async fn pause_pinging(ips: Vec<String>, state: State<'_, AppState>) -> Result<(
     Ok(())
 }
 
+#[tauri::command]
+async fn stop_all_except(ips: Vec<String>, state: State<'_, AppState>) -> Result<(), String> {
+    let mut tasks = state.tasks.lock().await;
+    eprintln!("Stopping all tasks except: {:?}", ips);
+    let mut errors = Vec::new();
+
+    // Collect IPs to stop (those not in ips)
+    let ips_to_stop: Vec<String> = tasks
+        .keys()
+        .filter(|ip| !ips.contains(ip))
+        .cloned()
+        .collect();
+
+    for ip in &ips_to_stop {
+        if let Some((handle, shutdown_tx)) = tasks.remove(ip) {
+            // Send shutdown signal for graceful exit
+            if let Err(e) = shutdown_tx.send(()).await {
+                eprintln!("Failed to send shutdown signal for IP {}: {}", ip, e);
+                errors.push(format!(
+                    "Failed to send shutdown signal for IP {}: {}",
+                    ip, e
+                ));
+            }
+
+            // Await the task to ensure it has stopped
+            match tokio::time::timeout(std::time::Duration::from_secs(5), handle).await {
+                Ok(Ok(_)) => eprintln!("Task for IP {} stopped successfully", ip),
+                Ok(Err(e)) => {
+                    eprintln!("Failed to stop task for IP {}: {}", ip, e);
+                    errors.push(format!("Failed to stop task for IP {}: {}", ip, e));
+                }
+                Err(_) => {
+                    eprintln!("Task for IP {} timed out", ip);
+                    errors.push(format!("Task for IP {} timed out", ip));
+                }
+            }
+        }
+    }
+
+    if !errors.is_empty() {
+        return Err(errors.join("; "));
+    }
+    Ok(())
+}
+
 // Ping logic for a single IP, running until shutdown signal is received
 async fn ping_ip(
     ip: String,
@@ -187,100 +246,3 @@ async fn ping_ip(
         }
     }
 }
-
-// #[tauri::command]
-// async fn start_pinging(
-//     app_handle: AppHandle,
-//     ips: Vec<String>,
-//     state: State<'_, AppState>,
-// ) -> Result<(), String> {
-//     let client = Client::new(&Config::default()).expect("Failed to create ping client");
-//     // Create a single surge-ping client
-//     let mut tasks = state.tasks.lock().await;
-//     eprintln!("Start IPs: {:?}", ips);
-//     for ip in ips {
-//         // Check if a task for this IP is already running
-//         if tasks.contains_key(&ip) {
-//             let result = format!("Task for {} already running", ip);
-//             if let Err(e) = app_handle.emit("ping-result", &result) {
-//                 eprintln!("Failed to emit ping result for {}: {}", ip, e);
-//             }
-//             continue;
-//         }
-
-//         let app_handle = app_handle.clone();
-//         // let client = client;
-//         // let client = ;
-//         let ip_clone = ip.clone();
-//         let task = tokio::spawn(ping_ip(app_handle, client.clone(), ip_clone));
-//         tasks.insert(ip, task);
-//     }
-
-//     Ok(())
-// }
-
-// #[tauri::command]
-// async fn pause_pinging(ips: Vec<String>, state: State<'_, AppState>) -> Result<(), String> {
-//     let mut tasks = state.tasks.lock().await;
-//     eprintln!("Stop IPs: {:?}", ips);
-//     for ip in ips {
-//         if let Some(handle) = tasks.remove(&ip) {
-//             handle.abort();
-//         }
-//     }
-
-//     Ok(())
-// }
-
-// async fn ping_ip(app_handle: AppHandle, client: Client, ip: String) {
-//     let ip_addr: IpAddr = match ip.parse() {
-//         Ok(addr) => addr,
-//         Err(e) => {
-//             let result = format!("Invalid IP {}: {}", ip, e);
-//             if let Err(e) = app_handle.emit("ping-result", &result) {
-//                 eprintln!("Failed to emit ping result for {}: {}", ip, e);
-//             }
-//             return;
-//         }
-//     };
-
-//     // Use a random identifier for this pinger
-//     let identifier = PingIdentifier(rand::random::<u16>());
-//     let mut sequence = PingSequence(0);
-
-//     loop {
-//         let result: PingResult = match client
-//             .pinger(ip_addr, identifier)
-//             .await
-//             .ping(sequence, &[0; 8]) // 8-byte payload
-//             .await
-//         {
-//             Ok((_, duration)) => PingResult {
-//                 host: ip.clone(),
-//                 duration: duration.as_millis(),
-//                 timestamp: SystemTime::now()
-//                     .duration_since(UNIX_EPOCH)
-//                     .expect("Time went backwards")
-//                     .as_millis(),
-//                 status: "success".to_string(),
-//             },
-//             Err(e) => PingResult {
-//                 host: ip.clone(),
-//                 duration: 0,
-//                 timestamp: SystemTime::now()
-//                     .duration_since(UNIX_EPOCH)
-//                     .expect("Time went backwards")
-//                     .as_millis(),
-//                 status: format!("error: {}", e),
-//             },
-//         };
-
-//         // Emit result to frontend
-//         if let Err(e) = app_handle.emit("ping-result", &result) {
-//             eprintln!("Failed to emit ping result for {}: {}", ip, e);
-//         }
-
-//         sequence = PingSequence(sequence.0.wrapping_add(1)); // Increment sequence number
-//         time::sleep(Duration::from_secs(2)).await;
-//     }
-// }

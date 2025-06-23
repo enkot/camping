@@ -18,7 +18,7 @@ const { breadcrumbs = [] } = defineProps<{
 </script>
 
 <template>
-    <header class="sticky top-0 flex border-b bg-background h-14 px-4 py-2 justify-between">
+    <header class="sticky top-0 flex border-b bg-background h-14 px-4 py-2 justify-between z-10">
         <div class="flex shrink-0 items-center gap-2">
             <SidebarTrigger class=" md:hidden -ml-1" />
             <Separator orientation="vertical" class=" md:hidden mr-2 h-4" />

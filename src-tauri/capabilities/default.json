@@ -6,6 +6,8 @@
     "main"
   ],
   "permissions": [
+    "core:event:default", 
+    "pinia:default", 
     "core:default",
     "opener:default",
     "store:default"
