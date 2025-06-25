@@ -1,8 +1,6 @@
-import { computed, reactive, ref } from "vue";
+import { ref } from "vue";
 import { defineStore } from "pinia";
-import { Host, HostInfo, PingResult, Dashboard } from "@/types";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { HostInfo, Dashboard } from "@/types";
 
 export const useStore = defineStore("dashboards", () => {
   const dashboards = ref<Dashboard[]>([]);

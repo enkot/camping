@@ -16,7 +16,7 @@ import {
   getSortedRowModel,
   useVueTable,
 } from '@tanstack/vue-table'
-import { ArrowUpDown, ChevronDown } from 'lucide-vue-next'
+import { ArrowUpDown } from 'lucide-vue-next'
 import { h, ref, toRef } from 'vue'
 import { Icon } from "@iconify/vue";
 import { valueUpdater } from '@/utils'
@@ -24,12 +24,6 @@ import { valueUpdater } from '@/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 
 import { Input } from '@/components/ui/input'
 import {
@@ -41,8 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import DropdownAction from '@/components/DataTableDropDown.vue'
-import { Host, HostInfo, PingResult } from "@/types";
-import { useHosts } from '@/composables/hosts';
+import { Host, PingResult } from "@/types";
 import HostEditDialog from '@/components/HostEditDialog.vue';
 import { useStore } from '@/stores/hosts';
 
@@ -146,12 +139,6 @@ const table = useVueTable({
     get expanded() { return expanded.value },
   },
 })
-
-function onSubmit(values: any) {
-  console.log('Form submitted!', values)
-  // addHost(values as HostInfo)
-  showDialog.value = false
-}
 </script>
 
 <template>

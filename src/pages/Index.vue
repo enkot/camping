@@ -1,24 +1,31 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, customRef, useHost } from "vue";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { useColorMode } from '@vueuse/core'
+import { Swappable, Plugins } from '@shopify/draggable';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import Card from "@/components/Card.vue";
 import DashboardSwitcher from "@/components/DashboardSwitcher.vue";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/vue";
-import { useAsyncStorageRef } from "@/composables";
-import { Host, HostInfo, PingResult } from "@/types";
+import { HostInfo } from "@/types";
 import AppHeader from '@/components/AppHeader.vue';
-import { useHosts } from "@/composables/hosts";
 import { useStore } from "@/stores/hosts";
+import { onMounted } from 'vue';
 
 
 const mode = useColorMode()
 
 const store = useStore()
+
+onMounted(() => {
+  // Initialize draggable
+  const containers = document.querySelectorAll('.draggable-container');
+  const swappable = new Swappable(containers, {
+    draggable: '.draggable-item',
+    handle: '.draggable-handle',
+    plugins: [Plugins.ResizeMirror]
+  });
+})
 </script>
 
 <template>
@@ -61,15 +68,22 @@ const store = useStore()
       </div>
     </template>
   </AppHeader>
-  <div class="flex-col md:flex">
+  <div class="flex h-full flex-col overflow-hidden md:h-screen -mt-14 pt-14">
     <!-- <div class="border-b-none">
       <div class="flex h-14 items-center px-2">
         <MainNav class="mx-6" />
       </div>
     </div> -->
-    <div class="grid auto-rows-min gap-2 px-2 sm:grid-cols-3 mt-2">
-      <Card v-for="host in [...store.hosts, ...store.hosts, ...store.hosts]" v-bind="host"
-        @start="store.start([host.host])" @pause="store.pause([host.host])" />
+    <div class="draggable-container grid gap-1 p-1 sm:grid-cols-3 flex-grow overflow-hidden">
+      <Card v-for="host in [...store.hosts, ...store.hosts]" v-bind="host" @start="store.start([host.host])"
+        @pause="store.pause([host.host])" handle-class="draggable-handle" class="flex-1 draggable-item" />
     </div>
   </div>
 </template>
+
+<style>
+.draggable-source--is-dragging {
+  opacity: 0;
+  /* Hide original element during drag */
+}
+</style>

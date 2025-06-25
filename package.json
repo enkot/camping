@@ -13,6 +13,7 @@
     "@iconify-icons/radix-icons": "^1.2.9",
     "@kurkle/color": "^0.3.4",
     "@robloche/chartjs-plugin-streaming": "^3.1.0",
+    "@shopify/draggable": "^1.1.4",
     "@tailwindcss/vite": "^4.1.4",
     "@tanstack/vue-table": "^8.21.3",
     "@tauri-apps/api": "^2",

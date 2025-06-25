@@ -12,10 +12,6 @@ defineProps<{
 defineEmits<{
   edit: [string]
 }>()
-
-function copy(id: string) {
-  navigator.clipboard.writeText(id)
-}
 </script>
 
 <template>

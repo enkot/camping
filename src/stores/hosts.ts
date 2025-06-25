@@ -1,6 +1,6 @@
 import { computed, reactive, ref } from "vue";
 import { defineStore } from "pinia";
-import { Host, HostInfo, PingResult } from "@/types";
+import { Dashboard, Host, HostInfo, PingResult } from "@/types";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
@@ -9,10 +9,13 @@ export const useStore = defineStore(
   () => {
     const pingResults = reactive<{ [host: string]: PingResult[] }>({});
     const hostsInfo = ref<HostInfo[]>([]);
+    const dashboards = ref<Dashboard[]>([]);
 
     const hosts = computed<Host[]>(() => {
       return hostsInfo.value.map((item) => {
         const results = pingResults[item.host] || [];
+
+        console.log("item.paused", item.paused);
 
         return {
           ...item,
@@ -30,7 +33,10 @@ export const useStore = defineStore(
 
       const info = hostsInfo.value.find((item) => item.host === host);
 
-      if (info) info.continued = true;
+      if (info) {
+        // info.paused = false;
+        info.continued = true;
+      }
     });
 
     async function start(_hosts: string[]) {
@@ -82,18 +88,60 @@ export const useStore = defineStore(
       invoke("pause_pinging", { ips: [_host] });
     }
 
+    function addDashboard(dashboard: Dashboard) {
+      dashboards.value = [...dashboards.value, dashboard];
+    }
+
+    function editDashboard(_dashboard: string, host: HostInfo) {
+      dashboards.value = dashboards.value.map((d) => {
+        if (d.name === _dashboard) return { ...d, ...host };
+
+        return d;
+      });
+    }
+
+    function addDashboardHost(dashboard: string, host: string) {
+      dashboards.value = dashboards.value.map((d) => {
+        if (d.name === dashboard) {
+          return {
+            ...d,
+            hosts: [...d.hosts, host],
+          };
+        }
+        return d;
+      });
+    }
+
+    function removeDashboardHost(dashboard: string, host: string) {
+      dashboards.value = dashboards.value.map((d) => {
+        if (d.name === dashboard) {
+          return {
+            ...d,
+            hosts: d.hosts.filter((h) => h !== host),
+          };
+        }
+        return d;
+      });
+    }
+
     return {
+      hostsInfo,
       hosts,
+      dashboards,
       start,
       pause,
       ping,
       addHost,
       editHost,
+      addDashboard,
+      editDashboard,
     };
   },
   {
     tauri: {
       saveOnChange: true,
+      saveStrategy: "debounce",
+      saveInterval: 1000,
     },
   }
 );

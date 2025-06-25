@@ -24,7 +24,7 @@ const pinia = createPinia();
 
 pinia.use(
   createPlugin({
-    autoStart: true,
+    // autoStart: true,
   })
 );
 

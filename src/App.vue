@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { RouterView } from "vue-router";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { useMenu } from '@/composables';
 import AppSidebar from '@/components/AppSidebar.vue';
+import { useStore } from "@/stores/hosts";
 
-const opened = useMenu()
+const store = useStore();
+store.$tauri.start().then(() => {
+  store.pause(store.hostsInfo.map((item) => item.host));
+  // store.hostsInfo = store.hostsInfo.map((item) => {
+  //   return {
+  //     ...item,
+  //     paused: true,
+  //   };
+  // });
+});
 </script>
 
 <template>

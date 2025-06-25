@@ -7,7 +7,7 @@ use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use surge_ping::{Client, Config, PingIdentifier, PingSequence};
 use tauri::{AppHandle, Emitter, State};
-use tauri_plugin_pinia::{ManagerExt, SaveStrategy};
+use tauri_plugin_pinia::SaveStrategy;
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
@@ -34,6 +34,7 @@ pub fn run() {
         // .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(
             tauri_plugin_pinia::Builder::new()
+                .path("./")
                 .default_save_strategy(SaveStrategy::throttle_secs(3))
                 .autosave(Duration::from_secs(60))
                 .pretty(true)

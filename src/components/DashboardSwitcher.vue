@@ -21,19 +21,11 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import { vMaska } from "maska/vue"
 import {
     Form,
@@ -43,7 +35,6 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form'
-import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { HostInfo } from '@/types';
@@ -79,18 +70,8 @@ const showDialog = ref(false)
 const selectedTeam = ref<Team>(groups[0].teams[0])
 
 const formSchema = toTypedSchema(z.object({
-    alias: z.string().min(2).max(50).optional(),
-    host: z.string().ip().refine((host) => {
-    // verify that ID exists in database
-        return !props.hostsInfo.some(item => item.host === host)
-    }, {
-        message: 'This host is already in use.'
-    })
+    name: z.string().min(2).max(50)
 }))
-
-const form = useForm({
-    validationSchema: formSchema,
-})
 
 function onSubmit(values: any) {
     console.log('Form submitted!', values)

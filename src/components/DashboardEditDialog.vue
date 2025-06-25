@@ -24,11 +24,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { Host } from '@/types';
 import { useStore } from '@/stores/hosts';
 
 const props = defineProps<{
-    host?: string;
+    dashboard?: string;
 }>();
 
 const show = defineModel<boolean>({ default: false })
@@ -37,26 +36,20 @@ const store = useStore()
 const formRef = ref<FormContext | null>(null)
 
 const formSchema = toTypedSchema(z.object({
-    alias: z.string().min(2).max(50).optional(),
-    host: z.string().ip().refine((host) => {
-        // verify that ID exists in database
-        return !store.hosts.filter(h => h.host !== props.host).some(h => h.host === host)
-    }, {
-        message: 'This host is already in use.'
-    })
+    name: z.string().min(2).max(50)
 }))
 
-watch(() => props.host, () => {
-    const target = store.hosts.find(h => h.host === props.host)
+watch(() => props.dashboard, () => {
+    const target = store.dashboards.find(h => h.name === props.dashboard)
 
-    if (props.host && target) formRef.value?.setValues(target)
+    if (props.dashboard && target) formRef.value?.setValues(target)
 })
 
 function onSubmit(values: any) {
-    if (props.host)
-        store.editHost(props.host, values as Host)
+    if (props.dashboard)
+        store.editDashboard(props.dashboard, values)
     else
-        store.addHost(values as Host)
+        store.addDashboard(values)
 
     show.value = false
 }
@@ -67,32 +60,20 @@ function onSubmit(values: any) {
         <Dialog v-model:open="show">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{{ host ? 'Edit Host' : 'Add Host' }}</DialogTitle>
+                    <DialogTitle>{{ dashboard ? 'Edit Dashboard' : 'Add Dashboard' }}</DialogTitle>
                     <DialogDescription>
-                        {{ host ? 'Edit' : 'Add' }} host's address and alias.
+                        {{ dashboard ? 'Edit' : 'Add' }} dashboard's name.
                     </DialogDescription>
                 </DialogHeader>
                 <div>
                     <form id="dialogForm" @submit="handleSubmit($event, onSubmit)">
                         <div class="space-y-4 py-2 pb-4">
                             <div class="space-y-2">
-                                <FormField v-slot="{ componentField }" name="alias">
+                                <FormField v-slot="{ componentField }" name="name">
                                     <FormItem>
-                                        <FormLabel>Alias</FormLabel>
+                                        <FormLabel>Name</FormLabel>
                                         <FormControl>
-                                            <Input type="text" placeholder="Google" v-bind="componentField" />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                </FormField>
-                            </div>
-                            <div class="space-y-2">
-                                <FormField v-slot="{ componentField }" name="host">
-                                    <FormItem>
-                                        <FormLabel>Host</FormLabel>
-                                        <FormControl>
-                                            <Input v-maska="'#00.#00.#00.#00'" data-maska-tokens="0:[0-9]:optional"
-                                                placeholder="8.8.8.8" v-bind="componentField" />
+                                            <Input type="text" placeholder="My hosts" v-bind="componentField" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

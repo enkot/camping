@@ -2,15 +2,12 @@
 import { ArchiveX, Command, File, Inbox, Send, Trash2 } from 'lucide-vue-next'
 import { h, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Label } from '@/components/ui/label'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
-  SidebarInput,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -148,24 +145,18 @@ const mails = ref(data.mails)
 const { setOpen } = useSidebar()
 </script>
 <template>
-    <Sidebar
-    class="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row"
-    v-bind="props"
-  >
+  <Sidebar class="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row" v-bind="props">
     <!-- This is the first sidebar -->
     <!-- We disable collapsible and adjust width to icon. -->
     <!-- This will make the sidebar appear as icons. -->
-    <Sidebar
-        v-bind="props"
-      collapsible="none"
-      class="!w-[calc(var(--sidebar-width-icon)_+_1px)] border-r h-screen"
-    >
+    <Sidebar v-bind="props" collapsible="none" class="!w-[calc(var(--sidebar-width-icon)_+_1px)] border-r h-screen">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" as-child class="md:h-8 md:p-0">
               <a href="#">
-                <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-foreground text-orange-500">
+                <div
+                  class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-foreground text-orange-500">
                   <Command class="size-4" />
                 </div>
                 <div class="grid flex-1 text-left text-sm leading-tight">
@@ -182,20 +173,15 @@ const { setOpen } = useSidebar()
           <SidebarGroupContent class="px-1.5 md:px-0">
             <SidebarMenu>
               <SidebarMenuItem v-for="item in data.navMain" :key="item.title">
-                <SidebarMenuButton
-                  :tooltip="h('div', { hidden: false }, item.title)"
-                  :is-active="activeItem.title === item.title"
-                  class="px-2.5 md:px-2"
-                  :as="RouterLink"
-                  :to="item.url"
+                <SidebarMenuButton :tooltip="h('div', { hidden: false }, item.title)"
+                  :is-active="activeItem.title === item.title" class="px-2.5 md:px-2" :as="RouterLink" :to="item.url"
                   @click="() => {
                     activeItem = item
                     const mail = data.mails.sort(() => Math.random() - 0.5)
                     mails = mail.slice(0, Math.max(5, Math.floor(Math.random() * 10) + 1))
                     setOpen(true)
-                  }"
-                >
-                
+                  }">
+
                   <component :is="item.icon" />
                   <span>{{ item.title }}</span>
                 </SidebarMenuButton>
@@ -208,5 +194,5 @@ const { setOpen } = useSidebar()
         <NavUser :user="data.user" />
       </SidebarFooter> -->
     </Sidebar>
-    </Sidebar>
+  </Sidebar>
 </template>
